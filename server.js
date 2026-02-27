@@ -19,14 +19,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: Number(process.env.EMAIL_PORT),
-  secure: false, // true for 465, false for 587 + starttls
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
 });
 
-// Test route to check server is alive
+// Test route
 app.get('/api/test', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
 });
@@ -44,14 +44,12 @@ app.post('/api/send-email', async (req, res) => {
     to: process.env.EMAIL_TO,
     replyTo: email,
     subject: `New message from ${email}`,
-    text: `From: \( {email}\n\nMessage:\n \){message}`,
+    text: `From: ${email}\n\nMessage:\n${message}`,
     html: `
-      <h2 style="color: #6366f1;">New Contact Form Submission</h2>
+      <h2>New Contact Form Submission</h2>
       <p><strong>From:</strong> ${email}</p>
       <p><strong>Message:</strong></p>
-      <div style="background:#1f2937; padding:1rem; border-radius:8px; white-space:pre-wrap;">
-        ${message.replace(/\n/g, '<br>')}
-      </div>
+      <div style="white-space:pre-wrap;">${message}</div>
     `,
   };
 
@@ -59,7 +57,7 @@ app.post('/api/send-email', async (req, res) => {
     await transporter.sendMail(mailOptions);
     res.json({ success: true, message: 'Message sent successfully' });
   } catch (err) {
-    console.error('Email send failed:', err.message);
+    console.error(err);
     res.status(500).json({ error: 'Failed to send message. Try again later.' });
   }
 });
@@ -68,5 +66,4 @@ app.post('/api/send-email', async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running → http://localhost:${PORT}`);
-  console.log(`Test: http://localhost:${PORT}/api/test`);
 });
